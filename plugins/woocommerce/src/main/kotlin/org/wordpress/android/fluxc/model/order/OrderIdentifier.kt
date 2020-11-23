@@ -1,6 +1,7 @@
 package org.wordpress.android.fluxc.model.order
 
 import org.wordpress.android.fluxc.model.WCOrderModel
+import org.wordpress.android.fluxc.model.WCSimpleOrderModel
 
 typealias OrderIdentifier = String
 
@@ -9,6 +10,11 @@ data class OrderIdSet(val id: Int, val remoteOrderId: Long, val localSiteId: Int
 @Suppress("FunctionName")
 fun OrderIdentifier(orderModel: WCOrderModel): OrderIdentifier {
     return with(orderModel) { "$id-$remoteOrderId-$localSiteId" }
+}
+
+@Suppress("FunctionName")
+fun OrderIdentifier(simpleOrderModel: WCSimpleOrderModel): OrderIdentifier {
+    return with(simpleOrderModel) { "$id-$remoteOrderId-$localSiteId" }
 }
 
 @Suppress("FunctionName")

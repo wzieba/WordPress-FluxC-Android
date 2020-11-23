@@ -519,4 +519,25 @@ class OrderSqlUtilsTest {
         assertEquals(300, summariesDb.size)
         assertEquals(summaryList, summariesDb)
     }
+
+    @Test
+    fun testGetSimpleOrdersByRemoteIds() {
+        // insert a list of generated orders
+        val site = SiteModel().apply { id = 1 }
+        val orders = OrderTestUtils.getAndSaveTestOrders(site)
+
+        // build a list of remote order IDs from the generated orders
+        val remoteIds = ArrayList<RemoteId>()
+        orders.forEach {
+            remoteIds.add(RemoteId(it.remoteOrderId))
+        }
+
+        // now compare the list of full orders with simple orders and make sure they're the same
+        val fullOrders = OrderSqlUtils.getOrdersForSiteByRemoteIds(site, remoteIds)
+        val simpleOrders = OrderSqlUtils.getSimpleOrdersForSiteByRemoteIds(site, remoteIds)
+        assertEquals(fullOrders.size, simpleOrders.size)
+        for (i in 0..fullOrders.size - 1) {
+            assertEquals(fullOrders[i].remoteOrderId, simpleOrders[i].remoteOrderId)
+        }
+    }
 }

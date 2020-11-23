@@ -12,11 +12,12 @@ import org.wordpress.android.fluxc.model.WCOrderShipmentProviderModel
 import org.wordpress.android.fluxc.model.WCOrderShipmentTrackingModel
 import org.wordpress.android.fluxc.model.WCOrderStatusModel
 import org.wordpress.android.fluxc.model.WCOrderSummaryModel
-import org.wordpress.android.fluxc.network.rest.wpcom.wc.order.OrderNoteApiResponse
 import org.wordpress.android.fluxc.network.rest.wpcom.wc.order.CoreOrderStatus
+import org.wordpress.android.fluxc.network.rest.wpcom.wc.order.OrderNoteApiResponse
 import org.wordpress.android.fluxc.network.rest.wpcom.wc.order.OrderShipmentTrackingApiResponse
 import org.wordpress.android.fluxc.network.rest.wpcom.wc.order.OrderStatusApiResponse
 import org.wordpress.android.fluxc.network.rest.wpcom.wc.order.OrderSummaryApiResponse
+import org.wordpress.android.fluxc.persistence.OrderSqlUtils
 import org.wordpress.android.fluxc.persistence.SiteSqlUtils
 import org.wordpress.android.fluxc.site.SiteUtils
 import org.wordpress.android.fluxc.utils.DateUtils
@@ -162,6 +163,16 @@ object OrderTestUtils {
         assertNotNull(siteModel)
 
         return siteModel
+    }
+
+    fun getAndSaveTestOrders(site: SiteModel): List<WCOrderModel> {
+        val orderList = ArrayList<WCOrderModel>()
+        for (i in 1..10L) {
+            val order = generateSampleOrder(siteId = site.id, remoteId = i)
+            orderList.add(order)
+            OrderSqlUtils.insertOrUpdateOrder(order)
+        }
+        return orderList
     }
 
     fun getTestOrderSummaryList(site: SiteModel): List<WCOrderSummaryModel> {

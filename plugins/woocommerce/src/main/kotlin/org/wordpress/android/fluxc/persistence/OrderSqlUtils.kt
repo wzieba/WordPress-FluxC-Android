@@ -16,6 +16,7 @@ import org.wordpress.android.fluxc.model.WCOrderShipmentProviderModel
 import org.wordpress.android.fluxc.model.WCOrderShipmentTrackingModel
 import org.wordpress.android.fluxc.model.WCOrderStatusModel
 import org.wordpress.android.fluxc.model.WCOrderSummaryModel
+import org.wordpress.android.fluxc.model.WCSimpleOrderModel
 import org.wordpress.android.fluxc.model.order.OrderIdSet
 
 object OrderSqlUtils {
@@ -121,6 +122,80 @@ object OrderSqlUtils {
                 .isIn(WCOrderModelTable.REMOTE_ORDER_ID, remoteOrderIds.map { it.value })
                 .endWhere()
                 .asModel
+    }
+
+    fun getSimpleOrdersForSiteByRemoteIds(site: SiteModel, remoteOrderIds: List<RemoteId>): List<WCSimpleOrderModel> {
+        if (remoteOrderIds.isEmpty()) {
+            return emptyList()
+        }
+
+        val simpleOrders = ArrayList<WCSimpleOrderModel>()
+
+        val columns = arrayOf(
+                WCOrderModelTable.LOCAL_SITE_ID,
+                WCOrderModelTable.ID,
+                WCOrderModelTable.REMOTE_ORDER_ID,
+                WCOrderModelTable.NUMBER,
+                WCOrderModelTable.STATUS,
+                WCOrderModelTable.CURRENCY,
+                WCOrderModelTable.DATE_CREATED,
+                WCOrderModelTable.DATE_MODIFIED,
+                WCOrderModelTable.TOTAL,
+                WCOrderModelTable.BILLING_FIRST_NAME,
+                WCOrderModelTable.BILLING_LAST_NAME
+        )
+
+        val sb = StringBuilder()
+        var isFirst = true
+        remoteOrderIds.forEach { remoteId ->
+            if (isFirst) {
+                isFirst = false
+                sb.append("${remoteId.value}")
+            } else {
+                sb.append(",${remoteId.value}")
+            }
+        }
+        val inClause = "($sb)"
+        val selection = """${WCOrderModelTable.LOCAL_SITE_ID} = ${site.id} 
+                            AND ${WCOrderModelTable.REMOTE_ORDER_ID} IN $inClause"""
+
+        WellSql.giveMeReadableDb().query(
+                "WCOrderModel",
+                columns,
+                selection,
+                null,
+                null,
+                null,
+                null
+        )?.let { c ->
+            try {
+                if (c.moveToFirst()) {
+                    do {
+                        simpleOrders.add(
+                                WCSimpleOrderModel(
+                                        localSiteId = c.getInt(c.getColumnIndex(WCOrderModelTable.LOCAL_SITE_ID)),
+                                        localOrderId = c.getInt(c.getColumnIndex(WCOrderModelTable.ID)),
+                                        remoteOrderId = c.getLong(c.getColumnIndex(WCOrderModelTable.REMOTE_ORDER_ID)),
+                                        number = c.getInt(c.getColumnIndex(WCOrderModelTable.NUMBER)),
+                                        status = c.getString(c.getColumnIndex(WCOrderModelTable.STATUS)),
+                                        currency = c.getString(c.getColumnIndex(WCOrderModelTable.CURRENCY)),
+                                        dateCreated = c.getString(c.getColumnIndex(WCOrderModelTable.DATE_CREATED)),
+                                        dateModified = c.getString(c.getColumnIndex(WCOrderModelTable.DATE_MODIFIED)),
+                                        total = c.getString(c.getColumnIndex(WCOrderModelTable.TOTAL)),
+                                        billingFirstName = c.getString(
+                                                c.getColumnIndex(WCOrderModelTable.BILLING_FIRST_NAME)),
+                                        billingLastName = c.getString(
+                                                c.getColumnIndex(WCOrderModelTable.BILLING_LAST_NAME))
+                                )
+                        )
+                    } while (c.moveToNext())
+                }
+            } finally {
+                c.close()
+            }
+        }
+
+        return simpleOrders
     }
 
     fun deleteOrdersForSite(site: SiteModel): Int {

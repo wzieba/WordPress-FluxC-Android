@@ -17,6 +17,7 @@ import org.wordpress.android.fluxc.model.WCOrderShipmentProviderModel
 import org.wordpress.android.fluxc.model.WCOrderShipmentTrackingModel
 import org.wordpress.android.fluxc.model.WCOrderStatusModel
 import org.wordpress.android.fluxc.model.WCOrderSummaryModel
+import org.wordpress.android.fluxc.model.WCSimpleOrderModel
 import org.wordpress.android.fluxc.model.order.OrderIdentifier
 import org.wordpress.android.fluxc.model.order.toIdSet
 import org.wordpress.android.fluxc.network.BaseRequest.BaseNetworkError
@@ -335,6 +336,14 @@ class WCOrderStore @Inject constructor(dispatcher: Dispatcher, private val wcOrd
         remoteOrderIds: List<RemoteId>
     ): Map<RemoteId, WCOrderModel> {
         val orders = OrderSqlUtils.getOrdersForSiteByRemoteIds(orderListDescriptor.site, remoteOrderIds)
+        return orders.associateBy { RemoteId(it.remoteOrderId) }
+    }
+
+    fun getSimpleOrdersForDescriptor(
+        orderListDescriptor: WCOrderListDescriptor,
+        remoteOrderIds: List<RemoteId>
+    ): Map<RemoteId, WCSimpleOrderModel> {
+        val orders = OrderSqlUtils.getSimpleOrdersForSiteByRemoteIds(orderListDescriptor.site, remoteOrderIds)
         return orders.associateBy { RemoteId(it.remoteOrderId) }
     }
 

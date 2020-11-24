@@ -338,6 +338,14 @@ class WCOrderStore @Inject constructor(dispatcher: Dispatcher, private val wcOrd
         return orders.associateBy { RemoteId(it.remoteOrderId) }
     }
 
+    fun getOrderSummariesForDescriptor(
+        orderListDescriptor: WCOrderListDescriptor,
+        remoteOrderIds: List<RemoteId>
+    ): Map<RemoteId, WCOrderSummaryModel> {
+        val summaries = OrderSqlUtils.getOrderSummariesForRemoteIds(orderListDescriptor.site, remoteOrderIds)
+        return summaries.associateBy { RemoteId(it.remoteOrderId) }
+    }
+
     fun getOrderSummariesByRemoteOrderIds(
         site: SiteModel,
         remoteOrderIds: List<RemoteId>
